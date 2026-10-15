@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Realidad aumentada — Santander AR</title>
+<meta name="theme-color" content="#1F1A14">
+<link rel="icon" href="assets/img/icono.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/styles.css">
+<!-- A-Frame 1.6.0 y MindAR 1.2.5 (MIT), servidos localmente: sin dependencias de CDN -->
+<script src="vendor/aframe-1.6.0.min.js"></script>
+<script src="vendor/mindar-image-aframe-1.2.5.prod.js"></script>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script src="js/models.js"></script>
+</head>
+<body class="ar">
+<div id="ar-container"></div>
+
+<div class="ar-bar">
+  <a class="icon-btn" id="volver" href="./" aria-label="Volver a la página del lugar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+  </a>
+  <div class="titulo" id="titulo"><small>Realidad aumentada</small>Santander AR</div>
+  <button class="icon-btn" id="ayuda" type="button" aria-label="Ver instrucciones">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.3c-.6.3-1 .8-1 1.5v.6"/><circle cx="12" cy="17" r=".6" fill="currentColor"/></svg>
+  </button>
+</div>
+
+<div class="scan-hint" id="scan" hidden>
+  <span class="esq"></span><span class="esq"></span><span class="esq"></span><span class="esq"></span>
+  <img id="scan-img" alt="">
+  <p id="scan-txt">Apunte a la ilustración</p>
+</div>
+<div class="estado" id="estado" role="status" aria-live="polite" hidden></div>
+
+<div class="ar-tools" id="tools" hidden>
+  <div class="fila chips-scroll" id="chips" aria-label="Puntos de información"></div>
+  <div class="fila" aria-label="Controles del modelo">
+    <button class="icon-btn" type="button" data-cmd="izq" aria-label="Girar a la izquierda"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.3-5.6"/><path d="M4 4v4h4"/></svg></button>
+    <button class="icon-btn" type="button" data-cmd="der" aria-label="Girar a la derecha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v4h-4"/></svg></button>
+    <button class="icon-btn" type="button" data-cmd="menos" aria-label="Reducir modelo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M5 12h14"/></svg></button>
+    <button class="icon-btn" type="button" data-cmd="mas" aria-label="Ampliar modelo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg></button>
+    <button class="icon-btn" type="button" data-cmd="reset" aria-label="Restablecer posición"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/><circle cx="12" cy="12" r="3"/></svg></button>
+    <button class="chip accion" type="button" id="accion" aria-pressed="false"></button>
+  </div>
+</div>
+
+<div class="ar-panel" id="panel-inicio" hidden>
+  <div class="ar-card" role="dialog" aria-modal="true" aria-labelledby="ini-t">
+    <p class="eyebrow" id="ini-k">Experiencia de realidad aumentada</p>
+    <h1 id="ini-t">Preparar la cámara</h1>
+    <ol>
+      <li>Tenga a mano la <strong>ilustración del lugar</strong> (impresa o en otra pantalla).</li>
+      <li>Pulse «Activar cámara» y acepte el permiso. La cámara solo se usa en su dispositivo para reconocer la ilustración; no se graba ni se envía nada.</li>
+      <li>Encuadre toda la ilustración con buena luz, a unos 25–40 cm.</li>
+      <li>Cuando aparezca el modelo, arrastre para girarlo y toque los pines numerados.</li>
+    </ol>
+    <img id="ini-img" alt="" style="border:2px solid var(--ink);max-height:170px;margin:0 auto;width:auto">
+    <div class="acciones">
+      <button class="btn primary" type="button" id="iniciar">Activar cámara</button>
+      <a class="btn ghost" id="ini-alt" href="#">Prefiero la vista 3D sin cámara</a>
+    </div>
+  </div>
+</div>
+
+<div class="ar-panel" id="panel-error" hidden>
+  <div class="ar-card" role="alertdialog" aria-modal="true" aria-labelledby="err-t">
+    <p class="eyebrow">No es posible mostrar la realidad aumentada</p>
+    <h2 id="err-t">Problema</h2>
+    <div class="error" id="err-p"></div>
+    <div class="acciones">
+      <a class="btn primary" id="err-alt" href="#">Ver el modelo en 3D (sin RA)</a>
+      <button class="btn" type="button" id="err-reintentar">Reintentar</button>
+      <a class="btn ghost" id="err-volver" href="./">Volver</a>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const { D, param, esc, crearHoja, compatibilidad, mensajeErrorCamara } = window.SAR;
+  const $ = (id) => document.getElementById(id);
+  const l = D.lugar(param('l'));
+  const estado = { fase: 'inicio', encontrado: false, vecesEncontrado: 0, errores: [] };
+  window.__sar = estado; // usado por las pruebas automatizadas
+
+  function mostrarError(titulo, html, conReintento) {
+    estado.fase = 'error'; estado.errores.push(titulo);
+    $('panel-inicio').hidden = true; $('scan').hidden = true; $('tools').hidden = true;
+    $('err-t').textContent = titulo; $('err-p').innerHTML = html;
+    $('err-reintentar').hidden = !conReintento;
+    $('panel-error').hidden = false;
+    $('err-alt').focus();
+  }
+  let toastT;
+  function toast(msg, ms) {
+    $('estado').textContent = msg; $('estado').hidden = false;
+    clearTimeout(toastT); if (ms) toastT = setTimeout(() => { $('estado').hidden = true; }, ms);
+  }
+
+  if (!l) {
+    $('err-alt').href = './#lugares'; $('err-alt').textContent = 'Ver los tres lugares';
+    mostrarError('Lugar no encontrado', '<p>El enlace no corresponde a ningún lugar de Santander AR.</p>', false);
+    return;
+  }
+
+  // ── Textos e interfaz del lugar
+  document.title = `RA · ${l.nombreCorto || l.nombre} — Santander AR`;
+  document.documentElement.style.setProperty('--accent', l.color);
+  $('titulo').innerHTML = `<small>Realidad aumentada · ${l.codigo}</small>${esc(l.nombreCorto || l.nombre)}`;
+  $('volver').href = `lugar.html?l=${l.id}`; $('err-volver').href = `lugar.html?l=${l.id}`;
+  $('ini-alt').href = $('err-alt').href = `vista3d.html?l=${l.id}`;
+  $('ini-k').textContent = `${l.numero} · ${l.nombreCorto || l.nombre}`;
+  $('ini-img').src = l.miniatura; $('ini-img').alt = `Ilustración marcador de ${l.nombre}`;
+  $('scan-img').src = l.miniatura;
+  $('scan-txt').textContent = `Apunte a la ilustración de ${l.nombreCorto || l.nombre}`;
+  $('panel-inicio').hidden = false;
+
+  const problemas = compatibilidad();
+  if (problemas.length) {
+    mostrarError('Dispositivo o conexión no compatible',
+      '<ul>' + problemas.map((p) => `<li>${esc(p.texto)}</li>`).join('') + '</ul><p>Puede explorar el mismo modelo en la vista 3D sin cámara.</p>', false);
+    estado.incompatible = problemas.map((p) => p.codigo);
+    return;
+  }
+
+  // ── Componente A-Frame que monta el modelo procedural sobre el marcador
+  const hoja = crearHoja();
+  let modelo = null, pivote = null, sprites = [];
+  const ESC0 = 0.8; // escala inicial: deja ver el borde de la ilustración bajo el modelo
+  AFRAME.registerComponent('santander-place', {
+    init() {
+      const THREE = AFRAME.THREE;
+      modelo = SantanderModels.build(THREE, l.id);
+      pivote = new THREE.Group(); pivote.scale.setScalar(ESC0);
+      pivote.add(modelo.root);
+      sprites = SantanderModels.addHotspots(THREE, modelo, l.puntos, l.color);
+      this.el.setObject3D('modelo', pivote);
+      estado.modeloListo = true;
+    },
+    tick(t, dt) { if (modelo && estado.encontrado) modelo.update(Math.min(dt || 16, 60) / 1000); },
+  });
+
+  // ── Escena: marcador → entidad anclada → modelo (rotado para quedar "de pie" sobre el papel)
+  $('ar-container').innerHTML = `
+    <a-scene mindar-image="imageTargetSrc: ${l.target}; autoStart: false; uiLoading: no; uiScanning: no; uiError: no; filterMinCF: 0.0001; filterBeta: 0.001"
+             vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false" renderer="antialias: true; colorManagement: true">
+      <a-camera position="0 0 0" look-controls="enabled: false" wasd-controls="enabled: false"></a-camera>
+      <a-entity light="type: ambient; intensity: 0.55; color: #fff6e8"></a-entity>
+      <a-entity light="type: directional; intensity: 1.15; color: #ffffff" position="0.6 1.2 1"></a-entity>
+      <a-entity id="target" mindar-image-target="targetIndex: 0">
+        <a-entity santander-place rotation="90 0 0" position="0 0 0.002"></a-entity>
+      </a-entity>
+    </a-scene>`;
+  const escena = document.querySelector('a-scene');
+  const objetivo = document.getElementById('target');
+  const escenaLista = new Promise((ok) => (escena.hasLoaded ? ok() : escena.addEventListener('loaded', ok, { once: true })));
+  // A-Frame inyecta un botón de VR oculto que no aplica a esta experiencia: se elimina.
+  escenaLista.then(() => document.querySelectorAll('.a-enter-vr, .a-enter-ar').forEach((b) => b.remove()));
+
+  // ── Inicio de la cámara con explicación previa del permiso
+  async function iniciar() {
+    $('iniciar').disabled = true; $('iniciar').textContent = 'Abriendo la cámara…';
+    try {
+      // Sondeo explícito para dar mensajes claros si el permiso se niega.
+      const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+      s.getTracks().forEach((t) => t.stop());
+    } catch (err) {
+      const m = mensajeErrorCamara(err); estado.errorCamara = err && err.name;
+      $('iniciar').disabled = false; $('iniciar').textContent = 'Activar cámara';
+      mostrarError(m.titulo, `<p>${esc(m.texto)}</p>`, true);
+      return;
+    }
+    await escenaLista;
+    estado.fase = 'cargando';
+    $('panel-inicio').hidden = true;
+    toast('Preparando el reconocimiento de la ilustración…');
+    escena.systems['mindar-image-system'].start();
+  }
+  escena.addEventListener('arReady', () => {
+    estado.fase = 'escaneando';
+    $('estado').hidden = true; $('scan').hidden = false;
+  });
+  escena.addEventListener('arError', () => {
+    mostrarError('No se pudo iniciar la realidad aumentada', '<p>La cámara no entregó video o el marcador no pudo cargarse. Recargue la página e inténtelo de nuevo.</p>', true);
+  });
+  objetivo.addEventListener('targetFound', () => {
+    estado.encontrado = true; estado.vecesEncontrado++; estado.fase = 'rastreando';
+    $('scan').hidden = true; $('tools').hidden = false;
+    if (estado.vecesEncontrado === 1) toast('Ilustración reconocida. Arrastre para girar; toque los números.', 3500);
+  });
+  objetivo.addEventListener('targetLost', () => {
+    estado.encontrado = false; estado.fase = 'escaneando';
+    $('scan').hidden = false; $('tools').hidden = true;
+  });
+
+  $('iniciar').addEventListener('click', () => {
+    if (estado.fase === 'inicio') iniciar(); else { $('panel-inicio').hidden = true; }
+  });
+  $('ayuda').addEventListener('click', () => {
+    if (estado.fase !== 'inicio') $('iniciar').textContent = 'Continuar';
+    $('iniciar').disabled = false;
+    $('panel-error').hidden = true; $('panel-inicio').hidden = false;
+  });
+  $('err-reintentar').addEventListener('click', () => location.reload());
+
+  // ── Puntos de información (chips accesibles + pines tocables en 3D)
+  $('chips').innerHTML = l.puntos.map((p, i) => `<button class="chip" type="button" data-punto="${p.id}"><span class="n">${i + 1}</span>${esc(p.titulo)}</button>`).join('');
+  const abrirPunto = (id) => {
+    const i = l.puntos.findIndex((p) => p.id === id);
+    if (i >= 0) { hoja.mostrar(l.puntos[i], i + 1); estado.ultimoPunto = id; }
+  };
+  $('chips').addEventListener('click', (e) => { const b = e.target.closest('[data-punto]'); if (b) abrirPunto(b.dataset.punto); });
+
+  // ── Controles del modelo
+  const acc = l.modelo.accion;
+  const pintarAccion = () => { const on = modelo && modelo.actionOn; $('accion').textContent = on ? acc.etiquetaActiva : acc.etiqueta; $('accion').setAttribute('aria-pressed', String(!!on)); };
+  pintarAccion();
+  $('accion').addEventListener('click', () => { if (!modelo) return; modelo.setAction(!modelo.actionOn); pintarAccion(); estado.accion = modelo.actionOn; });
+  const escalar = (f) => { const s = Math.min(2.2, Math.max(0.45, pivote.scale.x * f)); pivote.scale.setScalar(s); };
+  document.querySelector('#tools .fila:last-child').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-cmd]'); if (!b || !pivote) return;
+    const c = b.dataset.cmd;
+    if (c === 'izq') pivote.rotation.y -= Math.PI / 8;
+    if (c === 'der') pivote.rotation.y += Math.PI / 8;
+    if (c === 'mas') escalar(1.2);
+    if (c === 'menos') escalar(1 / 1.2);
+    if (c === 'reset') { pivote.rotation.set(0, 0, 0); pivote.scale.setScalar(ESC0); }
+    estado.rotacion = pivote.rotation.y; estado.escala = pivote.scale.x;
+  });
+
+  // ── Gestos: arrastrar = girar, pellizcar = escalar, tocar = abrir pin
+  const UI = '.ar-tools, .ar-bar, .ar-panel, .sheet';
+  const punteros = new Map(); let inicio = null, distIni = 0, escIni = 1;
+  window.addEventListener('pointerdown', (e) => {
+    if (e.target.closest(UI)) return;
+    punteros.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (punteros.size === 1) inicio = { x: e.clientX, y: e.clientY, rot: pivote ? pivote.rotation.y : 0, movido: false };
+    if (punteros.size === 2 && pivote) { const [a, b] = [...punteros.values()]; distIni = Math.hypot(a.x - b.x, a.y - b.y); escIni = pivote.scale.x; }
+  });
+  window.addEventListener('pointermove', (e) => {
+    if (!punteros.has(e.pointerId) || !pivote) return;
+    punteros.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (punteros.size === 2) { const [a, b] = [...punteros.values()]; const d = Math.hypot(a.x - b.x, a.y - b.y); pivote.scale.setScalar(Math.min(2.2, Math.max(0.45, escIni * d / distIni))); inicio && (inicio.movido = true); return; }
+    if (inicio) { const dx = e.clientX - inicio.x; if (Math.abs(dx) > 6) inicio.movido = true; pivote.rotation.y = inicio.rot + dx * 0.012; }
+  });
+  const fin = (e) => {
+    if (!punteros.has(e.pointerId)) return;
+    punteros.delete(e.pointerId);
+    if (punteros.size === 0 && inicio && !inicio.movido && estado.encontrado) tocar(e.clientX, e.clientY);
+    if (punteros.size === 0) inicio = null;
+  };
+  window.addEventListener('pointerup', fin); window.addEventListener('pointercancel', fin);
+
+  function tocar(x, y) {
+    const THREE = AFRAME.THREE, cam = escena.camera, canvas = escena.canvas;
+    if (!cam || !canvas || !sprites.length) return;
+    const r = canvas.getBoundingClientRect();
+    const ndc = new THREE.Vector2(((x - r.left) / r.width) * 2 - 1, -((y - r.top) / r.height) * 2 + 1);
+    const ray = new THREE.Raycaster(); ray.setFromCamera(ndc, cam); ray.camera = cam;
+    const hit = ray.intersectObjects(sprites, false)[0];
+    if (hit) abrirPunto(hit.object.userData.puntoId);
+  }
+  // Proyección de un pin a coordenadas de pantalla (solo para pruebas automatizadas).
+  estado.proyectar = (id) => {
+    const sp = sprites.find((s) => s.userData.puntoId === id); if (!sp) return null;
+    const v = new AFRAME.THREE.Vector3(); sp.getWorldPosition(v); v.project(escena.camera);
+    const r = escena.canvas.getBoundingClientRect();
+    return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height };
+  };
+
+  // ── Liberar la cámara al salir
+  window.addEventListener('pagehide', () => { try { escena.systems['mindar-image-system'].stop(); } catch (e) { /* ya detenida */ } });
+})();
+</script>
+</body>
+</html>

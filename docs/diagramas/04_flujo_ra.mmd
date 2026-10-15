@@ -1,0 +1,16 @@
+flowchart TD
+  A["ar.html?l=id"] --> B{"¿Lugar válido?"}
+  B -- No --> E0["Panel: Lugar no encontrado"]
+  B -- Sí --> C{"HTTPS, getUserMedia y WebGL<br/>disponibles?"}
+  C -- No --> E1["Panel: no compatible<br/>→ Vista 3D sin cámara"]
+  C -- Sí --> D["Panel de inicio: explica el uso de la cámara"]
+  D -- "Activar cámara" --> F{"getUserMedia<br/>(cámara trasera)"}
+  F -- "NotAllowedError" --> E2["Permiso denegado:<br/>cómo habilitarlo · Reintentar · Vista 3D"]
+  F -- "NotFound / NotReadable / otro" --> E3["Sin cámara / ocupada / error"]
+  F -- OK --> G["MindAR carga el .mind y arranca (arReady)"]
+  G --> H["Guía: Apunte a la ilustración"]
+  H -- targetFound --> I["Modelo 3D anclado + pines + controles"]
+  I -- targetLost --> H
+  I -- "Tocar pin / chip" --> J["Hoja de información con fuente"]
+  I -- "Arrastrar / pellizcar / botones" --> I
+  G -- arError --> E4["Error de RA · Reintentar"]

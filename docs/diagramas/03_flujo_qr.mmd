@@ -1,0 +1,13 @@
+sequenceDiagram
+  actor U as Usuario
+  participant B as Brochure (papel o PDF)
+  participant C as Cámara del sistema / lector QR
+  participant N as Navegador
+  participant S as Hosting HTTPS
+  U->>B: Abre la página de un lugar
+  U->>C: Escanea el código QR
+  C->>N: Abre https://…/lugar.html?l=barichara
+  N->>S: GET lugar.html, data.js, estilos
+  S-->>N: 200 OK
+  N-->>U: Página del lugar (datos, fuentes, botón RA)
+  Note over U,N: El QR solo navega. No activa la RA.

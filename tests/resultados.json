@@ -1,0 +1,203 @@
+{
+  "fecha": "2026-10-15T00:01:38.364Z",
+  "navegador": "Chromium sin interfaz (Playwright), WebGL por SwiftShader, cámara simulada",
+  "total": 19,
+  "aprobadas": 19,
+  "detecciones": {
+    "barichara": "3.1",
+    "chicamocha": "3.4",
+    "sangil": "3.2"
+  },
+  "resultados": [
+    {
+      "id": "PT-01",
+      "funcion": "Carga de la página principal",
+      "procedimiento": "Abrir index.html en viewport móvil 390×844 y contar los lugares listados.",
+      "esperado": "La página carga sin errores de consola y muestra 3 lugares.",
+      "obtenido": "HTTP 200, 3 lugares, 0 errores de consola",
+      "estado": "Aprobada",
+      "evidencia": "tests/evidence/PT-01_index_movil.png",
+      "ms": 1347
+    },
+    {
+      "id": "PT-02",
+      "funcion": "Navegación entre los tres lugares",
+      "procedimiento": "Desde index, abrir cada lugar; luego seguir el enlace «Siguiente» tres veces.",
+      "esperado": "Cada enlace abre la página del lugar correcto y «Siguiente» recorre los tres en ciclo.",
+      "obtenido": "Títulos: Barichara | Parque Nacional del Chicamocha | San Gil. Ciclo: chicamocha → sangil → barichara",
+      "estado": "Aprobada",
+      "evidencia": "",
+      "ms": 2206
+    },
+    {
+      "id": "PT-03",
+      "funcion": "Lugar inexistente",
+      "procedimiento": "Abrir lugar.html?l=desconocido, ar.html?l=desconocido y una ruta inexistente.",
+      "esperado": "Se muestra un mensaje claro con enlace a los lugares; el servidor devuelve la página 404.",
+      "obtenido": "«Lugar no encontrado» · «Lugar no encontrado» · HTTP 404 «Esta página no existe»",
+      "estado": "Aprobada",
+      "evidencia": "",
+      "ms": 654
+    },
+    {
+      "id": "PT-04",
+      "funcion": "Enlaces y recursos internos",
+      "procedimiento": "Recorrer todas las páginas y lugares, recolectar href/src internos y solicitarlos.",
+      "esperado": "Todos los enlaces y recursos internos responden HTTP 200 (sin enlaces rotos).",
+      "obtenido": "26 URL internas verificadas, 0 rotas. Enlaces externos (fuentes, no verificados aquí): 4",
+      "estado": "Aprobada",
+      "evidencia": "",
+      "ms": 9978
+    },
+    {
+      "id": "PT-05",
+      "funcion": "Ausencia de dependencias externas en tiempo de ejecución",
+      "procedimiento": "Abrir ar.html y vista3d.html registrando todas las solicitudes de red.",
+      "esperado": "Ninguna solicitud sale del dominio del sitio (sin CDN, analítica ni rastreadores).",
+      "obtenido": "0 solicitudes externas",
+      "estado": "Aprobada",
+      "evidencia": "",
+      "ms": 9855
+    },
+    {
+      "id": "PT-06",
+      "funcion": "Diseño adaptable (sin desbordamiento horizontal)",
+      "procedimiento": "Abrir cada página a 360 px de ancho y comparar scrollWidth con el ancho de la ventana.",
+      "esperado": "Ninguna página produce desplazamiento horizontal en móvil.",
+      "obtenido": "8 páginas sin desbordamiento a 360 px",
+      "estado": "Aprobada",
+      "evidencia": "tests/evidence/PT-06_ar_inicio_360.png",
+      "ms": 6329
+    },
+    {
+      "id": "PT-07",
+      "funcion": "Accesibilidad básica",
+      "procedimiento": "Revisar en todas las páginas: imágenes con alt, botones/enlaces con nombre accesible, idioma del documento.",
+      "esperado": "Todas las imágenes tienen alt, todos los controles tienen nombre y lang=\"es\".",
+      "obtenido": "6 páginas sin problemas detectados",
+      "estado": "Aprobada",
+      "evidencia": "",
+      "ms": 5633
+    },
+    {
+      "id": "PT-08",
+      "funcion": "Vista 3D sin cámara",
+      "procedimiento": "Abrir vista3d.html de cada lugar, esperar el render, pulsar el primer punto y el botón de acción.",
+      "esperado": "El modelo se dibuja, el panel de información muestra el punto y el botón cambia de estado; la página indica que no es RA.",
+      "obtenido": "barichara: «Piedra amarilla», acción=true; chicamocha: «Teleférico de 6,3 km», acción=true; sangil: «Barba de viejo», acción=true; errores de consola: 0",
+      "estado": "Aprobada",
+      "evidencia": "tests/evidence/PT-08_vista3d_*.png",
+      "ms": 25108
+    },
+    {
+      "id": "PT-09",
+      "funcion": "Contexto no seguro (HTTP fuera de localhost)",
+      "procedimiento": "Abrir ar.html mediante http://santander.test (resuelto a 127.0.0.1) para simular un sitio sin HTTPS.",
+      "esperado": "Se muestra el panel «Dispositivo o conexión no compatible» explicando HTTPS y se ofrece la vista 3D.",
+      "obtenido": "«Dispositivo o conexión no compatible» · menciona HTTPS: true · alternativa: vista3d.html?l=barichara",
+      "estado": "Aprobada",
+      "evidencia": "tests/evidence/PT-09_no_https.png",
+      "ms": 1263
+    },
+    {
+      "id": "PT-10",
+      "funcion": "Permiso de cámara denegado",
+      "procedimiento": "Simular que el usuario rechaza el permiso: getUserMedia se sustituye antes de cargar la página para que lance NotAllowedError (el diálogo de permisos real no puede automatizarse en modo sin interfaz). Pulsar «Activar cámara».",
+      "esperado": "Se muestra «Permiso de cámara denegado» con instrucciones para habilitarlo, botón Reintentar y acceso a la vista 3D.",
+      "obtenido": "«Permiso de cámara denegado» (error NotAllowedError); Reintentar visible: true; alternativa: vista3d.html?l=chicamocha",
+      "estado": "Aprobada",
+      "evidencia": "tests/evidence/PT-10_permiso_denegado.png",
+      "ms": 1377
+    },
+    {
+      "id": "PT-10b",
+      "funcion": "Dispositivo sin cámara",
+      "procedimiento": "Chromium real sin cámara disponible (sin dispositivo simulado). Pulsar «Activar cámara».",
+      "esperado": "getUserMedia falla con NotFoundError y se muestra «No se encontró una cámara» con acceso a la vista 3D.",
+      "obtenido": "«No se encontró una cámara» (error NotFoundError)",
+      "estado": "Aprobada",
+      "evidencia": "tests/evidence/PT-10b_sin_camara.png",
+      "ms": 902
+    },
+    {
+      "id": "PT-11",
+      "funcion": "RA: permiso concedido y reconocimiento del marcador (barichara)",
+      "procedimiento": "Cámara simulada con tests/fixtures/barichara.png (marcador en perspectiva sobre una mesa). Abrir ar.html?l=barichara, pulsar «Activar cámara» y esperar el evento targetFound de MindAR.",
+      "esperado": "MindAR arranca (arReady), reconoce la ilustración (targetFound), oculta la guía de escaneo, muestra los controles y dibuja el modelo anclado.",
+      "obtenido": "Detectado en 3.1 s; fase=rastreando; controles visibles=true; guía oculta=true; errores=0",
+      "estado": "Aprobada",
+      "evidencia": "tests/evidence/PT-11_ra_barichara_detectado.png",
+      "ms": 5555
+    },
+    {
+      "id": "PT-14",
+      "funcion": "RA: tocar un pin numerado del modelo",
+      "procedimiento": "Con el marcador detectado, proyectar el pin «columnas» a pantalla y hacer clic sobre él.",
+      "esperado": "Se abre la hoja de información con el título del punto y su fuente.",
+      "obtenido": "Clic en (263, 178) → «10 columnas monolíticas»; Fuente: Wikipedia, la enciclopedia libre · Wikipedia (inglés…",
+      "estado": "Aprobada",
+      "evidencia": "tests/evidence/PT-14_ra_pin_tocado.png",
+      "ms": 2318
+    },
+    {
+      "id": "PT-15",
+      "funcion": "RA: controles del modelo",
+      "procedimiento": "Pulsar girar derecha ×2, ampliar ×1, «Ver las 10 columnas» y luego restablecer.",
+      "esperado": "La rotación pasa a π/4 y la escala de 0,8 a 0,96; el botón de acción alterna su estado (aria-pressed) y su etiqueta; restablecer vuelve a 0 rad y escala 0,8.",
+      "obtenido": "rot=0.785 rad, escala=0.96; acción=true («Ocultar columnas»); tras restablecer rot=0, escala=0.8",
+      "estado": "Aprobada",
+      "evidencia": "tests/evidence/PT-15_ra_columnas.png",
+      "ms": 6613
+    },
+    {
+      "id": "PT-16",
+      "funcion": "RA: gesto de arrastre para girar",
+      "procedimiento": "Simular arrastre horizontal de 120 px sobre la vista de cámara.",
+      "esperado": "El modelo gira alrededor de su eje vertical sin abrir información.",
+      "obtenido": "rotación tras arrastre = 1.44 rad; hoja abierta=false",
+      "estado": "Aprobada",
+      "evidencia": "",
+      "ms": 2719
+    },
+    {
+      "id": "PT-12",
+      "funcion": "RA: permiso concedido y reconocimiento del marcador (chicamocha)",
+      "procedimiento": "Cámara simulada con tests/fixtures/chicamocha.png (marcador en perspectiva sobre una mesa). Abrir ar.html?l=chicamocha, pulsar «Activar cámara» y esperar el evento targetFound de MindAR.",
+      "esperado": "MindAR arranca (arReady), reconoce la ilustración (targetFound), oculta la guía de escaneo, muestra los controles y dibuja el modelo anclado.",
+      "obtenido": "Detectado en 3.4 s; fase=rastreando; controles visibles=true; guía oculta=true; errores=0",
+      "estado": "Aprobada",
+      "evidencia": "tests/evidence/PT-12_ra_chicamocha_detectado.png",
+      "ms": 6723
+    },
+    {
+      "id": "PT-13",
+      "funcion": "RA: permiso concedido y reconocimiento del marcador (sangil)",
+      "procedimiento": "Cámara simulada con tests/fixtures/sangil.png (marcador en perspectiva sobre una mesa). Abrir ar.html?l=sangil, pulsar «Activar cámara» y esperar el evento targetFound de MindAR.",
+      "esperado": "MindAR arranca (arReady), reconoce la ilustración (targetFound), oculta la guía de escaneo, muestra los controles y dibuja el modelo anclado.",
+      "obtenido": "Detectado en 3.2 s; fase=rastreando; controles visibles=true; guía oculta=true; errores=0",
+      "estado": "Aprobada",
+      "evidencia": "tests/evidence/PT-13_ra_sangil_detectado.png",
+      "ms": 5746
+    },
+    {
+      "id": "PT-17",
+      "funcion": "RA: escena sin marcador",
+      "procedimiento": "Cámara simulada con una mesa vacía (tests/fixtures/vacio.y4m). Iniciar la RA y esperar 10 s.",
+      "esperado": "No se reconoce ningún marcador; la guía «Apunte a la ilustración» permanece visible y no aparece el modelo.",
+      "obtenido": "detecciones=0; guía visible=true",
+      "estado": "Aprobada",
+      "evidencia": "tests/evidence/PT-17_ra_sin_marcador.png",
+      "ms": 13956
+    },
+    {
+      "id": "PT-18",
+      "funcion": "RA: marcador equivocado",
+      "procedimiento": "Cámara simulada mostrando el marcador de San Gil mientras se abre la experiencia de Barichara; esperar 10 s.",
+      "esperado": "La experiencia de Barichara no reacciona al marcador de otro lugar (no hay falsos positivos).",
+      "obtenido": "detecciones=0",
+      "estado": "Aprobada",
+      "evidencia": "",
+      "ms": 13465
+    }
+  ]
+}

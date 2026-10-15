@@ -1,0 +1,10 @@
+<!doctype html><html><head><meta charset="utf-8">
+<script src="/web/vendor/aframe-1.6.0.min.js"></script>
+<script src="/web/vendor/mindar-image-aframe-1.2.5.prod.js"></script></head>
+<body><a-scene mindar-image="imageTargetSrc: /web/assets/targets/barichara.mind; uiScanning:no; uiLoading:no" vr-mode-ui="enabled:false" device-orientation-permission-ui="enabled:false">
+<a-camera position="0 0 0" look-controls="enabled:false"></a-camera>
+<a-entity id="t" mindar-image-target="targetIndex: 0"><a-box color="red" scale="0.5 0.5 0.5"></a-box></a-entity>
+</a-scene>
+<script>window.log=[];const s=document.querySelector('a-scene');
+s.addEventListener('arReady',()=>log.push('arReady'));s.addEventListener('arError',e=>log.push('arError'));
+document.getElementById('t').addEventListener('targetFound',()=>log.push('found'));</script></body></html>

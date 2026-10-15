@@ -1,0 +1,27 @@
+flowchart LR
+  subgraph Impreso["Brochure impreso / PDF"]
+    QR["Código QR<br/>(navegación)"]
+    MK["Ilustración<br/>(marcador RA)"]
+  end
+  subgraph Movil["Navegador móvil (cliente)"]
+    PG["Páginas HTML<br/>index · lugar · ar · vista3d"]
+    DATA["data.js<br/>contenido + fuentes"]
+    MOD["models.js<br/>modelos 3D procedurales"]
+    UI["app.js<br/>hoja de info · compatibilidad · errores"]
+    AF["A-Frame 1.6.0<br/>(three.js r164)"]
+    MA["MindAR 1.2.5<br/>seguimiento de imagen"]
+    T3["three.js 0.164<br/>+ OrbitControls"]
+    CAM[("Cámara<br/>getUserMedia")]
+  end
+  subgraph Host["Hosting estático HTTPS"]
+    FILES["web/: HTML, CSS, JS,<br/>vendor/, assets/targets/*.mind"]
+  end
+  QR -- "URL lugar.html?l=…" --> PG
+  FILES -- "HTTPS" --> PG
+  PG --> DATA & UI
+  PG -- "ar.html" --> AF --> MA
+  MA --> CAM
+  CAM -. "video local, no se envía" .-> MA
+  MK -. "reconocido por" .-> MA
+  AF --> MOD
+  PG -- "vista3d.html" --> T3 --> MOD

@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Brochure — Santander AR</title>
+<link rel="icon" href="assets/img/icono.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/styles.css">
+<style>
+  /* El brochure se diseña en A4. En pantalla se ve como hojas; al imprimir (o con
+     scripts/generar_brochure.mjs) se convierte en PDF de 6 páginas. */
+  @page { size: A4; margin: 0; }
+  body.brochure { background: #CFC4B0; }
+  .page { position: relative; width: 210mm; max-width: 100%; min-height: 297mm; margin: 18px auto; background: var(--paper);
+    padding: 15mm 15mm 14mm; box-shadow: 0 2px 14px rgba(0,0,0,.25); display: flex; flex-direction: column; overflow: hidden; }
+  .page .folio { position: absolute; bottom: 8mm; left: 15mm; right: 15mm; display: flex; justify-content: space-between;
+    font: 600 8.5pt/1 var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); border-top: 1px solid var(--line); padding-top: 3mm; }
+  .b-h1 { font: 700 48pt/0.95 var(--display); letter-spacing: -0.02em; margin: 0; }
+  .b-h1 em { font-weight: 400; font-style: italic; color: var(--teja); }
+  .b-h2 { font: 600 28pt/1.05 var(--display); margin: 2mm 0 4mm; }
+  .b-p { font-size: 10.5pt; line-height: 1.5; margin: 0 0 3mm; }
+  .portada .collage { width: 76%; margin: 4mm auto 5mm; aspect-ratio: 4/2.7; }
+  .portada .collage figure { width: 58%; }
+  .portada .pie-portada { margin-top: auto; margin-bottom: 11mm; display: grid; grid-template-columns: 1fr auto; gap: 8mm; align-items: end; border-top: 2px solid var(--ink); padding-top: 5mm; }
+  .qr { background: #fff; padding: 2.5mm; border: 2px solid var(--ink); display: inline-block; line-height: 0; }
+  .qr img { width: 32mm; height: 32mm; image-rendering: pixelated; }
+  .qr-cap { font-size: 8pt; margin-top: 2mm; word-break: break-all; max-width: 42mm; color: var(--ink-2); line-height: 1.25; }
+  .aviso-qr { background: #FFE9B8; border: 2px solid var(--ink); padding: 3mm 4mm; font-size: 9.5pt; margin-bottom: 5mm; }
+  .aviso-qr[hidden] { display: none; }
+  .pasos-b { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5mm; margin: 4mm 0 6mm; counter-reset: p; }
+  .pasos-b div { border-top: 3px solid var(--ink); padding-top: 3mm; font-size: 10pt; line-height: 1.45; }
+  .pasos-b div::before { counter-increment: p; content: counter(p, decimal-leading-zero); display: block; font: 600 22pt/1 var(--display); color: var(--teja); margin-bottom: 2mm; }
+  .pasos-b strong { display: block; font-size: 11pt; margin-bottom: 1mm; }
+  .dos-col { display: grid; grid-template-columns: 1fr 1fr; gap: 7mm; }
+  .caja { border: 2px solid var(--ink); padding: 4mm 5mm; font-size: 9.6pt; line-height: 1.45; }
+  .caja h3 { font-size: 13pt; margin-bottom: 2mm; }
+  .caja ul { margin: 0; padding-left: 4.5mm; }
+  .lugar-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 6mm; }
+  .lugar-top .num { font: 600 44pt/0.9 var(--display); color: var(--c); }
+  .marker-b { width: 100%; border: 1px solid var(--ink); margin: 3mm 0 2mm; }
+  .marker-cap { font-size: 8.5pt; color: var(--ink-2); margin-bottom: 4mm; }
+  .datos-b { list-style: none; padding: 0; margin: 0; font-size: 9.4pt; line-height: 1.42; }
+  .datos-b li { padding: 1.6mm 0; border-bottom: 1px solid var(--line); }
+  .datos-b sup { font-size: 7pt; color: var(--c); font-weight: 600; }
+  .lugar-bottom { display: grid; grid-template-columns: 1fr 44mm; gap: 7mm; align-items: start; margin-top: auto; padding-bottom: 9mm; }
+  .fuentes-b { font-size: 8.6pt; line-height: 1.4; padding-left: 5mm; }
+  .fuentes-b li { margin-bottom: 2mm; word-break: break-word; }
+  .barra-acc { display: flex; justify-content: center; gap: 12px; padding: 14px; flex-wrap: wrap; }
+  @media print {
+    body.brochure { background: #fff; }
+    .page { margin: 0; box-shadow: none; width: 210mm; height: 297mm; min-height: 0; page-break-after: always; break-after: page; }
+    .no-print { display: none !important; }
+  }
+  @media screen and (max-width: 800px) {
+    .page { min-height: 0; padding: 18px 16px 48px; margin: 10px 0; }
+    .b-h1 { font-size: 40pt; } .pasos-b, .dos-col, .lugar-bottom { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body class="brochure">
+<div class="barra-acc no-print">
+  <a class="btn" href="./">Volver al sitio</a>
+  <button class="btn primary" type="button" onclick="window.print()">Imprimir o guardar como PDF</button>
+</div>
+<div id="brochure"></div>
+<script src="vendor/qrcode-generator.js"></script>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script>
+(function () {
+  const { D, esc, indiceFuentes } = window.SAR;
+  // Base de los QR: parámetro ?base=… o, por defecto, la carpeta donde está publicada esta página.
+  const q = new URLSearchParams(location.search).get('base');
+  const base = new URL(q || './', q ? undefined : location.href);
+  if (!base.pathname.endsWith('/')) base.pathname += '/';
+  const h = base.hostname;
+  const local = base.protocol === 'file:' || h === 'localhost' || /^127\./.test(h) || /^10\./.test(h) || /^192\.168\./.test(h) || /^172\.(1[6-9]|2\d|3[01])\./.test(h) || h.endsWith('.local');
+  const inseguro = base.protocol !== 'https:' && !local;
+  const url = (p) => new URL(p, base).href;
+  function qr(texto) {
+    const qrc = qrcode(0, 'M'); qrc.addData(texto); qrc.make();
+    return `<img src="${qrc.createDataURL(8, 2)}" alt="Código QR: ${esc(texto)}" data-qr="${esc(texto)}">`;
+  }
+  const avisoQR = local
+    ? `<div class="aviso-qr"><strong>QR de prueba local.</strong> Estos códigos apuntan a ${esc(base.origin)}, que solo es accesible desde este equipo o su red. Antes de imprimir, publique el sitio por HTTPS y regenere el brochure con su dirección pública.</div>`
+    : (inseguro ? `<div class="aviso-qr"><strong>Atención:</strong> la dirección no usa HTTPS; los navegadores bloquearán la cámara.</div>` : '');
+  const folio = (n) => `<div class="folio"><span>Santander AR · Cartilla de realidad aumentada</span><span>${n} / 6</span></div>`;
+  const pages = [];
+
+  // 1. Portada
+  pages.push(`<section class="page portada">
+    <p class="eyebrow">Turismo y patrimonio · Santander, Colombia</p>
+    <h1 class="b-h1" style="margin-top:6mm">Santander,<br><em>sobre la mesa.</em></h1>
+    <p class="b-p" style="font-size:13pt;margin-top:5mm;max-width:150mm">Cartilla de realidad aumentada con tres lugares: Barichara, el Parque Nacional del Chicamocha y San Gil. Escanee, apunte a las ilustraciones y explore maquetas 3D desde el navegador de su celular.</p>
+    <div class="collage" aria-hidden="true">${D.LUGARES.map((l) => `<figure><img src="${l.miniatura}" alt=""><figcaption>${l.numero} · ${esc(l.nombreCorto || l.nombre)}</figcaption></figure>`).join('')}</div>
+    ${avisoQR}
+    <div class="pie-portada">
+      <div><p class="eyebrow">MVP académico</p><p class="b-p" style="margin:1mm 0 0">Universidad de Santander (UDES) · Segunda actividad de evaluación · 2026</p></div>
+      <div><div class="qr">${qr(url('index.html'))}</div><div class="qr-cap">Inicio: ${esc(url('index.html'))}</div></div>
+    </div>
+    ${folio(1)}</section>`);
+
+  // 2. Cómo usar
+  pages.push(`<section class="page">
+    <p class="eyebrow">Antes de empezar</p>
+    <h2 class="b-h2">Cómo usar esta cartilla</h2>
+    <p class="b-p" style="max-width:160mm">Cada lugar tiene dos elementos distintos: un <strong>código QR</strong>, que solo abre la página del lugar, y una <strong>ilustración</strong> grande, que es el marcador que la cámara reconoce para colocar el modelo 3D encima.</p>
+    <div class="pasos-b">
+      <div><strong>Escanee el QR</strong>Use la cámara del celular o un lector de QR. Se abrirá la página del lugar.</div>
+      <div><strong>Inicie la RA</strong>Pulse «Iniciar realidad aumentada» y luego «Activar cámara». Acepte el permiso.</div>
+      <div><strong>Apunte a la ilustración</strong>Encuadre toda la ilustración de esa página. El modelo aparecerá sobre el papel.</div>
+    </div>
+    <div class="dos-col">
+      <div class="caja"><h3>Requisitos</h3><ul>
+        <li>Celular con cámara trasera.</li>
+        <li>Navegador actualizado: Chrome (Android) o Safari (iPhone).</li>
+        <li>Conexión a internet para abrir el sitio (≈ 4 MB la primera vez).</li>
+        <li>El sitio debe abrirse por <strong>https://</strong>: sin conexión segura el navegador bloquea la cámara.</li>
+        <li>Buena luz, sin reflejos, a 25–40 cm de la ilustración.</li></ul></div>
+      <div class="caja"><h3>Gestos en la experiencia</h3><ul>
+        <li><strong>Arrastrar</strong> con un dedo: girar el modelo.</li>
+        <li><strong>Pellizcar</strong> o botones + / −: cambiar el tamaño.</li>
+        <li><strong>Tocar un número</strong>: leer un dato con su fuente.</li>
+        <li><strong>Botón de acción</strong>: abrir el templo, pausar el teleférico o calmar el viento.</li>
+        <li>Sin cámara compatible: use la «Vista 3D sin cámara» (no es RA).</li></ul></div>
+    </div>
+    <div class="caja" style="margin-top:7mm"><h3>Privacidad y uso de la cámara</h3>
+      La cámara se procesa solo dentro del navegador para reconocer las ilustraciones. Santander AR no graba, no envía imágenes, no usa cookies ni pide datos personales.</div>
+    <p class="b-p" style="margin-top:7mm;font-size:9pt;color:var(--ink-2)">Las ilustraciones y los modelos son representaciones originales y simplificadas, no réplicas a escala. Los datos de cada lugar provienen de las fuentes citadas en la última página; los «relatos» del sitio son interpretaciones del equipo.</p>
+    ${folio(2)}</section>`);
+
+  // 3-5. Lugares
+  const todas = indiceFuentes(D.LUGARES.flatMap((l) => l.datos.flatMap((d) => d.fuente)));
+  D.LUGARES.forEach((l, i) => {
+    const destino = url(`lugar.html?l=${l.id}`);
+    const datos = l.datos.slice(0, 4);
+    pages.push(`<section class="page" style="--c:${l.color}">
+      <div class="lugar-top">
+        <div><p class="eyebrow">${esc(l.subtitulo)} · ${esc(l.provincia)}</p><h2 class="b-h2" style="margin-bottom:2mm">${esc(l.nombre)}</h2></div>
+        <span class="num">${l.numero}</span>
+      </div>
+      <img class="marker-b" src="${l.marcador}" alt="Marcador de realidad aumentada de ${esc(l.nombre)}">
+      <p class="marker-cap">▲ Marcador ${l.codigo}: apunte aquí la cámara después de pulsar «Iniciar realidad aumentada». Ilustración original, no a escala.</p>
+      <div class="lugar-bottom">
+        <ul class="datos-b">${datos.map((d) => `<li>${esc(d.t)} <sup>${d.fuente.map((k) => '[' + (todas.indexOf(k) + 1) + ']').join('')}</sup></li>`).join('')}</ul>
+        <div><div class="qr">${qr(destino)}</div><div class="qr-cap"><strong>Escanee para abrir ${esc(l.nombreCorto || l.nombre)}</strong><br>${esc(destino)}</div></div>
+      </div>
+      ${folio(3 + i)}</section>`);
+  });
+
+  // 6. Créditos y fuentes
+  pages.push(`<section class="page">
+    <p class="eyebrow">Créditos</p>
+    <h2 class="b-h2">Fuentes y licencias</h2>
+    <p class="b-p">Fuentes consultadas el ${esc(D.FECHA_CONSULTA)}. Los números entre corchetes de cada página remiten a esta lista.</p>
+    <ol class="fuentes-b">${todas.map((k) => `<li><strong>${esc(D.FUENTES[k].titulo)}</strong>. ${esc(D.FUENTES[k].nota)}<br>${esc(D.FUENTES[k].url)}</li>`).join('')}</ol>
+    <div class="dos-col" style="margin-top:6mm">
+      <div class="caja"><h3>Tecnología</h3>Realidad aumentada web con MindAR 1.2.5 y A-Frame 1.6.0; vista 3D con three.js 0.164. Todas con licencia MIT. Tipografías Fraunces y Work Sans (SIL OFL 1.1). QR con qrcode-generator (MIT).</div>
+      <div class="caja"><h3>Contenido visual</h3>Ilustraciones y modelos 3D originales del proyecto, generados por código. No se usaron fotografías ni modelos de terceros.</div>
+    </div>
+    <div class="caja" style="margin-top:6mm"><h3>Proyecto</h3>Santander AR es un MVP académico de la Universidad de Santander (UDES), 2026. No es un producto oficial de turismo ni de las entidades citadas.</div>
+    ${folio(6)}</section>`);
+
+  document.getElementById('brochure').innerHTML = pages.join('');
+  window.__brochure = { base: base.href, local, qrs: [...document.querySelectorAll('[data-qr]')].map((i) => i.dataset.qr) };
+})();
+</script>
+</body>
+</html>

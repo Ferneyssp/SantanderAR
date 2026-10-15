@@ -1,0 +1,10 @@
+{
+  "base": "http://localhost:8080/",
+  "local": true,
+  "qrs": [
+    "http://localhost:8080/index.html",
+    "http://localhost:8080/lugar.html?l=barichara",
+    "http://localhost:8080/lugar.html?l=chicamocha",
+    "http://localhost:8080/lugar.html?l=sangil"
+  ]
+}

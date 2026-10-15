@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8"><title>Compilador de marcadores</title></head>
+<body>
+<p>Compila las imágenes de web/assets/markers a archivos .mind (MindAR). Lo usa scripts/compilar_targets.mjs.</p>
+<pre id="log"></pre>
+<script type="module">
+  import { Compiler } from '/tools/vendor/mindar/mindar-image.prod.js';
+  const log = (m) => { document.getElementById('log').textContent += m + '\n'; };
+  const loadImg = (src) => new Promise((ok, ko) => {
+    const im = new Image(); im.onload = () => ok(im); im.onerror = ko; im.src = src;
+  });
+  const toB64 = (buf) => {
+    let s = ''; const b = new Uint8Array(buf);
+    for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode(...b.subarray(i, i + 0x8000));
+    return btoa(s);
+  };
+  window.compileTarget = async (src) => {
+    const img = await loadImg(src);
+    const compiler = new Compiler();
+    await compiler.compileImageTargets([img], (p) => {});
+    const data = compiler.exportData();
+    log('compilado ' + src + ' (' + data.byteLength + ' bytes)');
+    return toB64(data);
+  };
+  window.ready = true;
+</script>
+</body>
+</html>

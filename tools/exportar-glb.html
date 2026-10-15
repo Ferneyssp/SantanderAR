@@ -1,0 +1,17 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Exportar modelos GLB</title>
+<script type="importmap">{ "imports": { "three": "/web/vendor/three/three.module.min.js" } }</script>
+<script src="/web/js/models.js"></script></head>
+<body><p>Exporta los modelos procedurales de js/models.js a GLB. Lo usa scripts/exportar_glb.mjs.</p>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFExporter } from './vendor/GLTFExporter.js';
+const toB64 = (buf) => { let s = ''; const b = new Uint8Array(buf); for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode(...b.subarray(i, i + 0x8000)); return btoa(s); };
+window.exportar = async (id) => {
+  const m = SantanderModels.build(THREE, id);
+  m.update(0.5);
+  const scene = new THREE.Scene(); scene.name = 'SantanderAR_' + id; scene.add(m.root);
+  const glb = await new GLTFExporter().parseAsync(scene, { binary: true });
+  return toB64(glb);
+};
+window.ready = true;
+</script></body></html>

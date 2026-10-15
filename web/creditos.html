@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fuentes, créditos y licencias — Santander AR</title>
+<link rel="icon" href="assets/img/icono.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<header class="top"><div class="wrap"><a class="brand" href="./"><span>Santander</span><b>AR</b></a><nav><a href="./">Inicio</a></nav></div></header>
+<main class="wrap" style="padding-top:30px;padding-bottom:30px">
+  <p class="eyebrow">Transparencia</p>
+  <h1 style="font-size:clamp(32px,6vw,52px);margin-bottom:18px">Fuentes, créditos y licencias</h1>
+
+  <section class="block" style="padding-top:10px">
+    <h2>Fuentes de información</h2>
+    <p>Los datos de cada lugar se tomaron de estas fuentes. Fecha de consulta: <span id="fecha"></span>. Los textos marcados como «Relato» son interpretaciones del equipo, no datos.</p>
+    <ol class="fuentes" id="fuentes"></ol>
+  </section>
+
+  <section class="block">
+    <h2>Software de terceros</h2>
+    <div class="table-scroll"><table class="simple">
+      <thead><tr><th>Componente</th><th>Versión</th><th>Uso</th><th>Licencia</th></tr></thead>
+      <tbody>
+        <tr><td>MindAR (hiukim/mind-ar-js)</td><td>1.2.5</td><td>Seguimiento de imágenes y compilación de marcadores</td><td>MIT</td></tr>
+        <tr><td>A-Frame</td><td>1.6.0</td><td>Escena 3D de la experiencia RA</td><td>MIT</td></tr>
+        <tr><td>three.js</td><td>0.164.1</td><td>Vista 3D sin cámara y modelos procedurales</td><td>MIT</td></tr>
+        <tr><td>qrcode-generator (Kazuhiko Arase)</td><td>2.x</td><td>Códigos QR del brochure</td><td>MIT</td></tr>
+        <tr><td>Fraunces · Work Sans (Fontsource)</td><td>—</td><td>Tipografías</td><td>SIL Open Font License 1.1</td></tr>
+      </tbody>
+    </table></div>
+    <p class="small muted" style="margin-top:12px">Todas las bibliotecas se sirven desde este mismo sitio; la experiencia no carga recursos de CDN ni de terceros.</p>
+  </section>
+
+  <section class="block">
+    <h2>Ilustraciones y modelos 3D</h2>
+    <p>Las ilustraciones que funcionan como marcadores y los tres modelos 3D son <strong>originales del proyecto</strong>: se generan con código (scripts/generar_marcadores.py y js/models.js). No son fotografías ni réplicas arquitectónicas y no están a escala. No se usaron fotografías ni modelos de terceros.</p>
+  </section>
+
+  <section class="block">
+    <h2>Privacidad</h2>
+    <p>La cámara se procesa únicamente dentro del navegador para reconocer la ilustración. El sitio no graba video, no envía imágenes, no usa cookies ni analítica y no solicita datos personales.</p>
+  </section>
+
+  <section class="block">
+    <h2>Contexto académico</h2>
+    <p>MVP desarrollado para la segunda actividad de evaluación de un seminario de la Universidad de Santander (UDES), 2026. No es un producto oficial de turismo de Santander ni de las entidades citadas.</p>
+  </section>
+</main>
+<footer class="pie"><div class="wrap"><span>Santander AR · 2026</span></div></footer>
+<script src="js/data.js"></script>
+<script>
+  const D = SANTANDER_DATA;
+  document.getElementById('fecha').textContent = D.FECHA_CONSULTA;
+  const usadas = {};
+  D.LUGARES.forEach((l) => l.datos.forEach((d) => d.fuente.forEach((k) => { (usadas[k] = usadas[k] || new Set()).add(l.nombreCorto || l.nombre); })));
+  document.getElementById('fuentes').innerHTML = Object.entries(D.FUENTES).map(([k, f]) =>
+    `<li><a href="${f.url}" target="_blank" rel="noopener">${f.titulo}</a>. ${f.nota} <span class="muted">Usada en: ${[...(usadas[k] || [])].join(', ')}.</span></li>`).join('');
+</script>
+</body>
+</html>

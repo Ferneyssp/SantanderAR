@@ -1,0 +1,35 @@
+{
+  "name": "santander-ar",
+  "version": "1.0.0",
+  "description": "MVP de realidad aumentada web para explorar Barichara, el Parque Nacional del Chicamocha y San Gil (Santander, Colombia).",
+  "scripts": {
+    "start": "node scripts/serve.mjs",
+    "start:https": "node scripts/serve.mjs --https",
+    "build:marcadores": "python3 scripts/generar_marcadores.py && node scripts/compilar_targets.mjs",
+    "build:modelos": "node scripts/exportar_glb.mjs",
+    "build:brochure": "node scripts/generar_brochure.mjs",
+    "build:diagramas": "node scripts/renderizar_diagramas.mjs",
+    "test:fixtures": "python3 scripts/generar_video_prueba.py",
+    "test": "node tests/e2e.mjs",
+    "test:qr": "python3 tests/test_qr.py",
+    "matriz": "node scripts/generar_matriz.mjs",
+    "docs:contenido": "node scripts/generar_contenido.mjs"
+  },
+  "author": "Equipo Santander AR – UDES",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@fontsource/fraunces": "5.3.0",
+    "@fontsource/work-sans": "5.3.0",
+    "aframe": "1.6.0",
+    "mermaid": "11.17.2",
+    "mind-ar": "1.2.5",
+    "playwright": "1.64.1",
+    "qrcode-generator": "2.0.4",
+    "three": "0.164.1"
+  },
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  }
+}

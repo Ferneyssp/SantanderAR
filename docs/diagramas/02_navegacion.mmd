@@ -1,0 +1,13 @@
+flowchart TD
+  QRP["QR portada"] --> IDX["index.html<br/>Presentación + 3 lugares"]
+  QRL["QR de cada lugar"] --> LUG
+  IDX --> LUG["lugar.html?l=id<br/>Datos con fuente · relato · marcador"]
+  IDX --> MAR["marcadores.html<br/>Imprimir ilustraciones"]
+  IDX --> BRO["brochure.html<br/>Cartilla A4 / PDF"]
+  IDX --> CRE["creditos.html<br/>Fuentes y licencias"]
+  LUG --> AR["ar.html?l=id<br/>Experiencia RA"]
+  LUG --> V3D["vista3d.html?l=id<br/>Alternativa sin cámara (no RA)"]
+  LUG -- "Siguiente" --> LUG
+  AR -- "Volver" --> LUG
+  AR -- "Error / incompatibilidad" --> V3D
+  V3D -- "Iniciar RA" --> AR

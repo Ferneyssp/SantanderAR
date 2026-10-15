@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lugar — Santander AR</title>
+<meta name="theme-color" content="#F4EDE1">
+<link rel="icon" href="assets/img/icono.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<a class="skip" href="#contenido">Saltar al contenido</a>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="./"><span>Santander</span><b>AR</b><span class="sello">MVP</span></a>
+    <nav aria-label="Principal">
+      <a href="./#lugares">Todos los lugares</a>
+      <a class="opt" href="marcadores.html">Marcadores</a>
+    </nav>
+  </div>
+</header>
+<main id="contenido"></main>
+<footer class="pie">
+  <div class="wrap">
+    <span>Santander AR · MVP académico · UDES · 2026</span>
+    <span><a href="creditos.html">Fuentes, créditos y licencias</a></span>
+  </div>
+</footer>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script>
+  (function () {
+    const { D, esc, param, refs, listaFuentes, indiceFuentes } = window.SAR;
+    const main = document.getElementById('contenido');
+    const l = D.lugar(param('l'));
+    if (!l) {
+      document.title = 'Lugar no encontrado — Santander AR';
+      main.innerHTML = `<section class="block"><div class="wrap"><h1>Lugar no encontrado</h1>
+        <p>El enlace o código QR no corresponde a ninguno de los lugares de Santander AR.</p>
+        <a class="btn primary" href="./#lugares">Ver los tres lugares</a></div></section>`;
+      return;
+    }
+    document.title = `${l.nombreCorto || l.nombre} — Santander AR`;
+    document.documentElement.style.setProperty('--accent', l.color);
+    const orden = indiceFuentes(l.datos.flatMap((d) => d.fuente));
+    const idx = D.LUGARES.indexOf(l);
+    const sig = D.LUGARES[(idx + 1) % D.LUGARES.length];
+    main.innerHTML = `
+      <section class="lugar-hero">
+        <div class="wrap grid">
+          <div>
+            <p class="eyebrow">${l.numero} · ${esc(l.provincia)}</p>
+            <h1>${esc(l.nombre)}</h1>
+            <p class="eyebrow">${esc(l.subtitulo)}</p>
+            <p style="margin-top:14px;font-size:19px">${esc(l.resumen)}</p>
+            <div class="cta-ar">
+              <a class="btn primary" href="ar.html?l=${l.id}" id="btn-ar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M12 7l4.5 2.5v5L12 17l-4.5-2.5v-5z"/></svg>
+                Iniciar realidad aumentada</a>
+              <a class="btn" href="vista3d.html?l=${l.id}">Vista 3D sin cámara</a>
+            </div>
+            <p class="req">Necesita la ilustración de este lugar (la que aparece en esta página), impresa o abierta en otra pantalla. La cámara se pedirá al iniciar y solo se usa para reconocer la ilustración.
+              <a href="${l.marcador}" target="_blank" rel="noopener">Abrir marcador en grande</a>.</p>
+          </div>
+          <figure style="margin:0">
+            <img class="marker" src="${l.marcador}" alt="Ilustración de ${esc(l.nombre)} que sirve como marcador de realidad aumentada" width="1200" height="900">
+            <figcaption class="small muted" style="margin-top:12px">Marcador ${l.codigo} · ilustración original, no fotográfica.</figcaption>
+          </figure>
+        </div>
+      </section>
+      <section class="block">
+        <div class="wrap cols">
+          <div>
+            <p class="eyebrow">Datos verificados</p>
+            <h2>Lo que conviene saber</h2>
+            <ul class="datos">${l.datos.map((d) => `<li>${esc(d.t)}<sup>${refs(d.fuente, orden)}</sup></li>`).join('')}</ul>
+          </div>
+          <div>
+            <div class="relato"><span class="eyebrow">Relato · interpretación del equipo</span><p>${esc(l.relato)}</p></div>
+            <h3 style="margin:28px 0 8px;font-size:22px">En la experiencia RA</h3>
+            <p><strong>${esc(l.modelo.titulo)}.</strong> ${l.puntos.length} pines numerados con información y el control «${esc(l.modelo.accion.etiqueta)}».</p>
+            <p class="aviso">${esc(l.modelo.aviso)}</p>
+          </div>
+        </div>
+      </section>
+      <section class="block">
+        <div class="wrap">
+          <p class="eyebrow">Fuentes</p>
+          <ol class="fuentes">${listaFuentes(orden)}</ol>
+          <p style="margin-top:24px"><a class="link-arrow" href="lugar.html?l=${sig.id}">Siguiente: ${esc(sig.nombreCorto || sig.nombre)} →</a></p>
+        </div>
+      </section>`;
+  })();
+</script>
+</body>
+</html>

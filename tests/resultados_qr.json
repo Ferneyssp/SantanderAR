@@ -1,0 +1,20 @@
+[
+  {
+    "id": "PT-19",
+    "funcion": "QR del brochure: contenido",
+    "procedimiento": "Rasterizar Santander_AR_brochure_PRUEBA_LOCAL.pdf a 150 ppp y decodificar con OpenCV QRCodeDetector.",
+    "esperado": "4 QR legibles (portada + 3 lugares) con los destinos correctos.",
+    "obtenido": "p.1: http://localhost:8080/index.html; p.3: http://localhost:8080/lugar.html?l=barichara; p.4: http://localhost:8080/lugar.html?l=chicamocha; p.5: http://localhost:8080/lugar.html?l=sangil",
+    "estado": "Aprobada",
+    "evidencia": "entregables/Santander_AR_brochure_PRUEBA_LOCAL.pdf"
+  },
+  {
+    "id": "PT-20",
+    "funcion": "QR del brochure: destinos accesibles",
+    "procedimiento": "Solicitar por HTTP cada URL decodificada (servidor de la base indicada en ejecución).",
+    "esperado": "Cada destino responde HTTP 200 con una página de Santander AR.",
+    "obtenido": "http://localhost:8080/index.html → HTTP 200; http://localhost:8080/lugar.html?l=barichara → HTTP 200; http://localhost:8080/lugar.html?l=chicamocha → HTTP 200; http://localhost:8080/lugar.html?l=sangil → HTTP 200 (base LOCAL: probado solo en este equipo)",
+    "estado": "Aprobada",
+    "evidencia": ""
+  }
+]

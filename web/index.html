@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Santander AR — patrimonio en realidad aumentada</title>
+<meta name="description" content="MVP académico de realidad aumentada web para explorar Barichara, el Parque Nacional del Chicamocha y San Gil (Santander, Colombia).">
+<meta name="theme-color" content="#F4EDE1">
+<link rel="icon" href="assets/img/icono.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<a class="skip" href="#contenido">Saltar al contenido</a>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="./"><span>Santander</span><b>AR</b><span class="sello">MVP</span></a>
+    <nav aria-label="Principal">
+      <a href="#lugares">Lugares</a>
+      <a class="opt" href="#como">Cómo funciona</a>
+      <a href="marcadores.html">Marcadores</a>
+      <a class="opt" href="brochure.html">Brochure</a>
+    </nav>
+  </div>
+</header>
+
+<main id="contenido">
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <p class="eyebrow">Turismo y patrimonio · Santander, Colombia</p>
+        <h1>Santander, <em>sobre la mesa.</em></h1>
+        <p class="lead">Santander AR convierte una cartilla impresa en tres maquetas 3D que aparecen sobre sus ilustraciones: el templo de piedra de Barichara, el cañón del Chicamocha con su teleférico y la isla de El Gallineral en San Gil. Funciona en el navegador del celular, sin instalar aplicaciones.</p>
+        <div class="acciones">
+          <a class="btn primary" href="#lugares">Elegir un lugar</a>
+          <a class="btn" href="marcadores.html">Imprimir marcadores</a>
+        </div>
+      </div>
+      <div class="collage" aria-hidden="true">
+        <figure><img src="assets/markers/barichara-thumb.jpg" alt="" width="600" height="450"><figcaption>01 · Barichara</figcaption></figure>
+        <figure><img src="assets/markers/chicamocha-thumb.jpg" alt="" width="600" height="450"><figcaption>02 · Chicamocha</figcaption></figure>
+        <figure><img src="assets/markers/sangil-thumb.jpg" alt="" width="600" height="450"><figcaption>03 · San Gil</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="como" aria-labelledby="como-t">
+    <div class="wrap">
+      <p class="eyebrow">Cómo funciona</p>
+      <h2 id="como-t">Dos códigos distintos, un mismo recorrido</h2>
+      <ol class="pasos">
+        <li><h3>Escanee el QR</h3><p>Cada QR del brochure abre la página de un lugar. El QR solo sirve para navegar: no activa la realidad aumentada.</p></li>
+        <li><h3>Apunte a la ilustración</h3><p>Pulse «Iniciar realidad aumentada», permita la cámara y enfoque la ilustración del lugar. Esa ilustración es el marcador.</p></li>
+        <li><h3>Explore el modelo</h3><p>La maqueta 3D aparece anclada al papel. Gírela, acérquela y toque los pines numerados para leer datos con fuente.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="block" id="lugares" aria-labelledby="lugares-t">
+    <div class="wrap">
+      <p class="eyebrow">Tres lugares</p>
+      <h2 id="lugares-t">Elija dónde empezar</h2>
+      <div class="lugares" id="lista-lugares"></div>
+    </div>
+  </section>
+
+  <section class="block" aria-labelledby="sin-t">
+    <div class="wrap cols">
+      <div>
+        <p class="eyebrow">Antes de empezar</p>
+        <h2 id="sin-t">Qué necesita</h2>
+        <ul>
+          <li>Un celular con cámara y un navegador actualizado (Chrome en Android o Safari en iPhone).</li>
+          <li>Conexión a internet para cargar la página (la experiencia RA descarga unos 4 MB la primera vez).</li>
+          <li>Las ilustraciones impresas, o abiertas en otra pantalla (por ejemplo, el brochure PDF en un computador).</li>
+          <li>Buena luz y la ilustración completa dentro del encuadre.</li>
+        </ul>
+      </div>
+      <div>
+        <p class="eyebrow">Si su equipo no es compatible</p>
+        <p>Cada lugar ofrece una <strong>vista 3D sin cámara</strong> con el mismo modelo e información. Es una alternativa informativa: no es realidad aumentada, porque el modelo no se ancla a ningún objeto real.</p>
+        <p class="small muted">La cámara se usa solo dentro del navegador para reconocer la ilustración. Santander AR no graba, no envía imágenes a ningún servidor y no recopila datos personales.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="pie">
+  <div class="wrap">
+    <span>Santander AR · MVP académico · Universidad de Santander (UDES) · 2026</span>
+    <span><a href="creditos.html">Fuentes, créditos y licencias</a></span>
+  </div>
+</footer>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script>
+  (function () {
+    const { D, esc } = window.SAR;
+    document.getElementById('lista-lugares').innerHTML = D.LUGARES.map((l) => `
+      <a class="lugar-row" href="lugar.html?l=${l.id}" style="--c:${l.color}">
+        <span class="num" aria-hidden="true">${l.numero}</span>
+        <span>
+          <h3>${esc(l.nombre)}</h3>
+          <span class="eyebrow meta">${esc(l.subtitulo)} · ${esc(l.provincia)}</span>
+          <p>${esc(l.resumen)}</p>
+          <span class="link-arrow">Ver lugar y experiencia RA →</span>
+        </span>
+        <img src="${l.miniatura}" alt="Ilustración marcador de ${esc(l.nombre)}" width="600" height="450" loading="lazy">
+      </a>`).join('');
+  })();
+</script>
+</body>
+</html>

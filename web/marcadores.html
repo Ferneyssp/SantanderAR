@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Marcadores imprimibles — Santander AR</title>
+<link rel="icon" href="assets/img/icono.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/styles.css">
+<style>
+  .hoja { display: grid; gap: 28px; }
+  .m { border-top: 2px solid var(--ink); padding-top: 16px; break-inside: avoid; page-break-inside: avoid; }
+  .m img { border: 1px solid var(--ink); width: 100%; max-width: 760px; }
+  @media print {
+    .top, .pie, .no-print { display: none !important; }
+    body { background: #fff; }
+    .m { page-break-after: always; border: 0; }
+    .m img { max-width: 100%; }
+  }
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap"><a class="brand" href="./"><span>Santander</span><b>AR</b></a><nav><a href="./">Inicio</a></nav></div></header>
+<main class="wrap" style="padding-top:30px;padding-bottom:40px">
+  <p class="eyebrow">Para imprimir o mostrar en otra pantalla</p>
+  <h1 style="font-size:clamp(32px,6vw,52px)">Marcadores de realidad aumentada</h1>
+  <p class="no-print" style="max-width:40em;margin-top:12px">Estas tres ilustraciones activan los modelos 3D. Imprímalas en hoja carta o A4, a color y sin recortar el marco negro, o ábralas en un computador y apunte el celular a la pantalla. Evite el papel brillante bajo luz directa.</p>
+  <p class="no-print"><button class="btn" type="button" onclick="window.print()">Imprimir marcadores</button></p>
+  <div class="hoja" id="hoja"></div>
+</main>
+<footer class="pie"><div class="wrap"><span>Ilustraciones originales generadas por el proyecto Santander AR · <a href="creditos.html">Créditos</a></span></div></footer>
+<script src="js/data.js"></script>
+<script>
+  document.getElementById('hoja').innerHTML = SANTANDER_DATA.LUGARES.map((l) => `
+    <section class="m">
+      <p class="eyebrow">${l.numero} · Marcador ${l.codigo}</p>
+      <h2 style="font-size:28px;margin:4px 0 12px">${l.nombre}</h2>
+      <img src="${l.marcador}" alt="Marcador de realidad aumentada: ilustración de ${l.nombre}" width="1200" height="900">
+      <p class="small muted" style="margin-top:8px">Abra <strong>lugar.html?l=${l.id}</strong> y pulse «Iniciar realidad aumentada».</p>
+    </section>`).join('');
+</script>
+</body>
+</html>

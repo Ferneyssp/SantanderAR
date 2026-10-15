@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vista 3D sin cámara — Santander AR</title>
+<meta name="theme-color" content="#1F1A14">
+<link rel="icon" href="assets/img/icono.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/styles.css">
+<script type="importmap">{ "imports": { "three": "./vendor/three/three.module.min.js" } }</script>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script src="js/models.js"></script>
+</head>
+<body class="visor">
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="./"><span>Santander</span><b>AR</b><span class="sello">3D</span></a>
+    <nav aria-label="Principal"><a id="v-volver" href="./">Volver al lugar</a></nav>
+  </div>
+</header>
+<p class="visor-banner" id="banner"><strong>Vista 3D sin cámara.</strong> Alternativa informativa: no es realidad aumentada porque el modelo no se ancla a la ilustración. Para la experiencia RA use <a id="v-ar" href="#" style="color:inherit">Iniciar realidad aumentada</a>.</p>
+<div class="visor-stage" id="stage">
+  <div class="visor-tools">
+    <div class="fila chips-scroll" id="chips" style="display:flex;gap:8px;width:100%"></div>
+    <button class="chip accion" type="button" id="accion" aria-pressed="false"></button>
+  </div>
+</div>
+<script type="module">
+  import * as THREE from 'three';
+  import { OrbitControls } from './vendor/three/OrbitControls.js';
+  const { D, param, crearHoja, esc } = window.SAR;
+  const l = D.lugar(param('l')) || D.LUGARES[0];
+  const stage = document.getElementById('stage');
+  document.title = `Vista 3D · ${l.nombreCorto || l.nombre} — Santander AR`;
+  document.documentElement.style.setProperty('--accent', l.color);
+  document.getElementById('v-volver').href = `lugar.html?l=${l.id}`;
+  document.getElementById('v-ar').href = `ar.html?l=${l.id}`;
+  const estado = { listo: false }; window.__visor = estado;
+
+  let renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  } catch (e) {
+    stage.innerHTML = `<div class="wrap" style="padding:30px 16px"><h2>No fue posible iniciar WebGL</h2><p>Este dispositivo no puede dibujar modelos 3D. Consulte la información del lugar en <a href="lugar.html?l=${l.id}">su página</a>.</p></div>`;
+    throw e;
+  }
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  stage.prepend(renderer.domElement);
+  renderer.domElement.setAttribute('aria-label', `Modelo 3D interactivo: ${l.modelo.titulo}`);
+  renderer.domElement.setAttribute('role', 'img');
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(40, 1, 0.01, 20);
+  camera.position.set(0.5, 0.82, 0.85);
+  scene.add(new THREE.AmbientLight(0xfff6e8, 1.1));
+  const sol = new THREE.DirectionalLight(0xffffff, 2.2); sol.position.set(0.8, 1.6, 1); scene.add(sol);
+  const modelo = SantanderModels.build(THREE, l.id);
+  const sprites = SantanderModels.addHotspots(THREE, modelo, l.puntos, l.color);
+  scene.add(modelo.root);
+  // Sombra suave de contacto
+  const sombra = new THREE.Mesh(new THREE.CircleGeometry(0.62, 48), new THREE.MeshBasicMaterial({ color: 0x5a4632, transparent: true, opacity: 0.12 }));
+  sombra.rotation.x = -Math.PI / 2; sombra.position.y = -0.022; sombra.scale.y = 0.75; scene.add(sombra);
+
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.target.set(0, 0.1, 0); controls.enableDamping = true; controls.minDistance = 0.4; controls.maxDistance = 2.4;
+  controls.maxPolarAngle = Math.PI * 0.49; controls.autoRotate = true; controls.autoRotateSpeed = 0.6;
+  controls.addEventListener('start', () => { controls.autoRotate = false; });
+
+  function resize() {
+    const w = stage.clientWidth, h = stage.clientHeight;
+    renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+    // En pantallas verticales se aleja la cámara para que el modelo quepa completo.
+    const dist = 1.25 * Math.max(1, 1.15 / camera.aspect);
+    camera.position.sub(controls.target).setLength(dist).add(controls.target);
+  }
+  new ResizeObserver(resize).observe(stage); resize();
+
+  const hoja = crearHoja();
+  const abrir = (id) => { const i = l.puntos.findIndex((p) => p.id === id); if (i >= 0) { hoja.mostrar(l.puntos[i], i + 1); estado.ultimoPunto = id; } };
+  document.getElementById('chips').innerHTML = l.puntos.map((p, i) => `<button class="chip" type="button" data-punto="${p.id}"><span class="n">${i + 1}</span>${esc(p.titulo)}</button>`).join('');
+  document.getElementById('chips').addEventListener('click', (e) => { const b = e.target.closest('[data-punto]'); if (b) abrir(b.dataset.punto); });
+  const btn = document.getElementById('accion');
+  const pintar = () => { btn.textContent = modelo.actionOn ? l.modelo.accion.etiquetaActiva : l.modelo.accion.etiqueta; btn.setAttribute('aria-pressed', String(!!modelo.actionOn)); };
+  pintar(); btn.addEventListener('click', () => { modelo.setAction(!modelo.actionOn); pintar(); });
+
+  let down = null;
+  renderer.domElement.addEventListener('pointerdown', (e) => { down = { x: e.clientX, y: e.clientY }; });
+  renderer.domElement.addEventListener('pointerup', (e) => {
+    if (!down || Math.hypot(e.clientX - down.x, e.clientY - down.y) > 6) return;
+    const r = renderer.domElement.getBoundingClientRect();
+    const ray = new THREE.Raycaster(); ray.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), camera);
+    const hit = ray.intersectObjects(sprites, false)[0]; if (hit) abrir(hit.object.userData.puntoId);
+  });
+
+  const clock = new THREE.Clock();
+  renderer.setAnimationLoop(() => {
+    modelo.update(Math.min(clock.getDelta(), 0.06));
+    controls.update(); renderer.render(scene, camera);
+    estado.listo = true;
+  });
+</script>
+</body>
+</html>
